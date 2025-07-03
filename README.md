@@ -1,6 +1,8 @@
 # 📅 Schedule Syncing
 
 **Schedule Syncing** is a web-based appointment coordination system that empowers **students**, **teachers**, and **administrators** to manage and synchronize their schedules effortlessly. The project leverages **Firebase** for authentication and data storage, and provides a clean, modern interface for all users.
+checkout:
+https://schedulesyncing.netlify.app/
 
 ---
 
