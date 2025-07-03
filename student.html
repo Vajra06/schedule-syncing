@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Student Dashboard</title>
+  <style>
+    
+    body { 
+      margin: 0;
+      font-family:'Times New Roman', Times, serif; 
+      background: #f4f6fa; 
+      color: #333; 
+      display: flex; 
+      height: 100vh; 
+  }
+    .sidebar { 
+      width: 240px; 
+      background: #2e3d68; 
+      color: white; display: flex; 
+      flex-direction: column; 
+      padding: 20px; 
+    }
+    .sidebar h2 {
+      margin: 0 0 30px; 
+      font-size: 20px; 
+    }
+    .nav-button { 
+      background: none; 
+      border: none; 
+      color: white; 
+      padding: 12px; 
+      text-align: left; 
+      cursor: pointer; 
+      font-size: 15px; 
+      border-radius: 4px; 
+      margin-bottom: 8px; 
+      transition: background 0.3s; 
+    }
+    .nav-button:hover, .nav-button.active { 
+      background: #1c2a4d; 
+    }
+    .main { 
+      flex: 1; 
+      padding: 30px; 
+      overflow-y: auto; 
+    }
+    .card { 
+      background: white; 
+      border-radius: 8px; 
+      padding: 20px; 
+      box-shadow: 0 0 8px rgba(0, 0, 0, 0.1); 
+      margin-bottom: 20px; 
+    }
+    input[type='text'], input[type='email'], input[type='datetime-local'] { width: calc(25% - 12px); padding: 10px; margin: 6px 6px 12px 0; border: 1px solid #ccc; border-radius: 4px; }
+    .book-btn, .action-btn, .logout-btn {
+       background: #2e86de; 
+       color: white; 
+       border: none; padding: 10px 16px; 
+       border-radius: 4px; 
+       cursor: pointer; 
+       transition: background 0.3s; 
+       font-size: 14px; 
+      }
+    .book-btn:hover, .action-btn:hover, .logout-btn:hover { 
+      background: #1b4f72; 
+    }
+    table { 
+      width: 100%; 
+      border-collapse: collapse; 
+    }
+    table th, table td {
+       text-align: left; 
+      padding: 10px; 
+      border-bottom: 1px solid #e0e0e0; 
+    }
+    table th { background: #2e3d68; 
+      color: white; 
+    }
+    .status { 
+      font-weight: bold; 
+      padding: 4px 8px;
+      border-radius: 4px; 
+      display: inline-block; }
+    .status.Pending { 
+      color: #f39c12; }
+    .status.Approved { 
+      color: #27ae60; }
+    .status.Cancelled { 
+      color: #c0392b; }
+    .delete-icon { 
+      display: none; 
+      background: none; 
+      border: none; 
+      color: #c0392b; 
+      cursor: pointer; 
+      font-size: 18px; 
+    }
+    .show-delete { 
+      display: inline-block; 
+    }
+    .popup { 
+      position: fixed; 
+      top: 50%; left: 50%; 
+      transform: translate(-50%, -50%); 
+      background: white; 
+      padding: 20px; 
+      border-radius: 8px; 
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.2); 
+      z-index: 1000; 
+      display: none; 
+      width: 320px; 
+      text-align: center; 
+    }
+    .popup h3 { 
+      margin: 0 0 20px; 
+    }
+    .popup button { 
+      margin: 0 10px; 
+      padding: 8px 20px; 
+      border-radius: 4px; 
+      border: none; 
+      cursor: pointer; 
+      font-size: 14px; 
+      transition: background 0.3s; }
+    .btn-confirm {
+       background-color: #183725; 
+      color: white; 
+    }
+    .btn-confirm:hover {
+       background-color: #245839; 
+      }
+    .btn-cancel { 
+      background-color: #290c0c; 
+      color: white; 
+    }
+    .btn-cancel:hover { 
+      background-color: #501e1a; 
+    }
+  </style>
+</head>
+<body>
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <h2>🎓 <span id="studentName">Loading...</span></h2>
+    <button class="nav-button active" onclick="showSection('home')">🏠 Home</button>
+    <button class="nav-button" onclick="showSection('book')">📅 Book Appointment</button>
+    <button class="nav-button" onclick="showSection('appointments')">📋 My Appointments</button>
+    <button class="nav-button" onclick="showSection('profile')">🙍‍♂️ Profile</button>
+    <button class="nav-button logout-btn" onclick="showLogoutConfirm()">🚪 Logout</button>
+  </div>
+  <!-- Main -->
+  <div class="main">
+    <div id="home" class="section">
+      <div class="card">
+        <h2>Welcome to Your Dashboard</h2>
+        <p>Use the menu to book appointments, view your bookings, or check your profile.</p>
+      </div>
+    </div>
+    <div id="book" class="section" style="display: none;">
+      <div class="card">
+        <h2>Book a New Appointment</h2>
+        <input type="text" id="teacherName" placeholder="Teacher Name" />
+        <input type="email" id="teacherEmail" placeholder="Teacher Email" />
+        <input type="text" id="purpose" placeholder="Purpose" />
+        <input type="datetime-local" id="apptTime" />
+        <button class="book-btn" onclick="bookAppointment()">Book Appointment</button>
+      </div>
+    </div>
+    <div id="appointments" class="section" style="display: none;">
+      <div class="card">
+        <h2>Your Appointments</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Teacher</th>
+              <th>Date & Time</th>
+              <th>Purpose</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="appointmentsTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div id="profile" class="section" style="display: none;">
+      <div class="card">
+        <h2>Your Profile</h2>
+        <p><strong>Name:</strong> <span id="profileName"></span></p>
+        <p><strong>Email:</strong> <span id="profileEmail"></span></p>
+      </div>
+    </div>
+  </div>
+  <!-- Popups -->
+  <div id="popup" class="popup"><h3 id="popupMessage"></h3></div>
+  <div id="logoutPopup" class="popup">
+    <h3>Are you sure you want to logout?</h3>
+    <button class="btn-confirm" onclick="confirmLogout()">Yes</button>
+    <button class="btn-cancel" onclick="cancelLogout()">No</button>
+  </div>
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+  
+  
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCxZqdueSoYW2c0ExgV_7CdbxmLjtk9QWs",
+      authDomain: "schedulesyncing.firebaseapp.com",
+      projectId: "schedulesyncing",
+      storageBucket: "schedulesyncing.appspot.com",
+      messagingSenderId: "28491593216",
+      appId: "1:28491593216:web:c4991a6ae34181a51c0ae5"
+    };
+
+    //Initialize Firebase app with the configuration
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+  
+    auth.onAuthStateChanged((user) => {
+      if (!user) {
+        window.location.href = "index.html";
+      } else {
+        document.getElementById("profileEmail").textContent = user.email;
+
+        db.collection("users").doc(user.uid).get().then(doc => {
+          const data = doc.data();
+          const name = data?.name || user.email.split("@")[0];
+          document.getElementById("studentName").textContent = name;
+          document.getElementById("profileName").textContent = name;
+        });
+
+        //real-time updates to this student's appointments
+        db.collection("appointments")
+          .where("studentId", "==", user.uid)
+          .orderBy("createdAt", "desc")
+          .onSnapshot(snapshot => {
+            const tbody = document.getElementById("appointmentsTableBody");
+            tbody.innerHTML = "";
+            snapshot.forEach(doc => {
+              const d = doc.data();
+              const delBtnId = `del-${doc.id}`;
+              const tr = document.createElement("tr");
+              tr.innerHTML = `
+                <td>${d.teacherName}</td>
+                <td>${formatDateTime(d.apptTime)}</td>
+                <td>${d.purpose}</td>
+                <td><span class="status ${d.status}">${d.status}</span></td>
+                <td>
+                  <button class="action-btn" onclick="showDeleteIcon('${delBtnId}')">Cancel</button>
+                  <button class="delete-icon" id="${delBtnId}" onclick="deleteAppointment('${doc.id}')">🗑️</button>
+                </td>`;
+              tbody.appendChild(tr);
+            });
+          });
+      }
+    });
+    function formatDateTime(dateString) {
+      const date = new Date(dateString);
+      return date.toLocaleString("en-US", {day:"numeric", month:"long", year:"numeric", hour:"numeric", minute:"2-digit", hour12:true});
+    }
+    function showSection(sectionId) {
+      document.querySelectorAll(".section").forEach(sec => sec.style.display = "none");
+      document.getElementById(sectionId).style.display = "block";
+      document.querySelectorAll(".nav-button").forEach(btn => btn.classList.remove("active"));
+      event.target.classList.add("active");
+    }
+    function showPopup(message) {
+      const popup = document.getElementById("popup");
+      document.getElementById("popupMessage").innerText = message;
+      popup.style.display = "block";
+      setTimeout(() => popup.style.display = "none", 2500);
+    }
+
+    // Function to handle booking a new appointment
+    function bookAppointment() {
+      const teacherName = document.getElementById("teacherName").value.trim();
+      const teacherEmail = document.getElementById("teacherEmail").value.trim().toLowerCase();
+      const purpose = document.getElementById("purpose").value.trim();
+      const apptTime = document.getElementById("apptTime").value.trim();
+      const user = auth.currentUser;
+      if (!teacherName || !teacherEmail || !purpose || !apptTime) {
+        showPopup("Please fill in all fields.");
+        return;
+      }
+
+      // Add new appointment document to Firestore
+      db.collection("appointments").add({
+        studentId: user.uid,
+        studentEmail: user.email,
+        teacherName,
+        teacherEmail,
+        purpose,
+        apptTime,
+        status: "Pending",
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      }).then(() => {
+        showPopup("Appointment sent for approval!");
+        document.getElementById("teacherName").value = "";
+        document.getElementById("teacherEmail").value = "";
+        document.getElementById("purpose").value = "";
+        document.getElementById("apptTime").value = "";
+        showSection('appointments');
+      });
+    }
+
+
+    function showDeleteIcon(id) {
+      document.getElementById(id).classList.add("show-delete");
+    }
+
+    function deleteAppointment(id) {
+      db.collection("appointments").doc(id).delete().then(() => showPopup("Appointment deleted."));
+    }
+    
+    function showLogoutConfirm() {
+      document.getElementById('logoutPopup').style.display = 'block';
+    }
+    function confirmLogout() {
+      auth.signOut().then(() => window.location.href = "index.html");
+    }
+    function cancelLogout() {
+      document.getElementById('logoutPopup').style.display = 'none';
+    }
+  </script>
+</body>
+</html>

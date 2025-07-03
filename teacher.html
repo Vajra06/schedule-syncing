@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Teacher Dashboard</title>
+  <style>
+    body {
+      margin:0;
+      font-family:'Times New Roman', Times, serif;
+      background: #f4f6fa;
+      display: flex;
+      min-height: 100vh;
+    }
+    .sidebar {
+      width: 220px;
+      background: #2c3e50;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      padding-top: 20px;
+    }
+    .sidebar h3 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .sidebar button {
+      background: none;
+      border: none;
+      color: white;
+      text-align: left;
+      padding: 12px 20px;
+      font-size: 15px;
+      cursor: pointer;
+      width: 100%;
+    }
+    .sidebar button:hover {
+      background: rgba(255,255,255,0.1);
+    }
+    .content {
+      flex: 1;
+      padding: 30px;
+      overflow-x: auto;
+    }
+    h2 {
+      color: #34495e;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+      background: white;
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    th, td {
+      padding: 12px;
+      border-bottom: 1px solid #eee;
+      text-align: left;
+    }
+    th {
+      background: #ecf0f1;
+    }
+    .status {
+      font-weight: bold;
+      padding: 3px 6px;
+      border-radius: 4px;
+    }
+    .Pending { color: orange; }
+    .Approved { color: #183725; }
+    .Cancelled { color: #431213; }
+    .actions button {
+      margin-right: 6px;
+      padding: 4px 10px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+    .approve-btn {
+      background-color: #183725;
+      color: white;
+    }
+    .cancel-btn {
+      background-color: #431213;
+      color: white;
+    }
+    .popup {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: white;
+      padding: 20px 30px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+      z-index: 1000;
+      display: none;
+      text-align: center;
+      font-size: 16px;
+    }
+    .popup button {
+      margin: 10px 8px 0;
+      padding: 6px 14px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .yes-btn {
+      background-color: #183725;
+      color: white;
+    }
+    .cancel-btn-popup {
+      background-color: #431213;
+      color: white;
+    }
+    .card {
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 15px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+  </style>
+</head>
+<body>
+  <div class="sidebar">
+    <h3 id="teacherName">👨‍🏫 Teacher</h3>
+    <button onclick="showSection('home')">🏠 Home</button>
+    <button onclick="showSection('pending')">📄 Pending Appointments</button>
+    <button onclick="showSection('profile')">👤 Profile</button>
+    <button onclick="confirmLogout()">🚪 Logout</button>
+  </div>
+  <div class="content">
+    <div id="homeSection">
+      <h2>Upcoming Appointments</h2>
+      <div id="approvedCards"></div>
+    </div>
+    <div id="pendingSection" style="display:none;">
+      <h2>Pending Appointments</h2>
+      <table id="pendingTable">
+        <thead>
+          <tr>
+            <th>Student Email</th>
+            <th>Purpose</th>
+            <th>Date & Time</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div id="profileSection" style="display:none;">
+      <h2>My Profile</h2>
+      <p><strong>Name:</strong> <span id="profileName"></span></p>
+      <p><strong>Email:</strong> <span id="profileEmail"></span></p>
+    </div>
+  </div>
+
+  <div id="popup" class="popup">
+    <span id="popupMessage"></span>
+  </div>
+  <div id="logoutConfirm" class="popup">
+    <p>Are you sure you want to logout?</p>
+    <button class="yes-btn" onclick="logout()">Yes</button>
+    <button class="cancel-btn-popup" onclick="closeLogoutConfirm()">Cancel</button>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCxZqdueSoYW2c0ExgV_7CdbxmLjtk9QWs",
+      authDomain: "schedulesyncing.firebaseapp.com",
+      projectId: "schedulesyncing",
+      storageBucket: "schedulesyncing.appspot.com",
+      messagingSenderId: "28491593216",
+      appId: "1:28491593216:web:c4991a6ae34181a51c0ae5"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    function showPopup(message) {
+      const popup = document.getElementById("popup");
+      document.getElementById("popupMessage").textContent = message;
+      popup.style.display = "block";
+      setTimeout(() => popup.style.display = "none", 2000);
+    }
+
+    function showSection(section) {
+      ['homeSection', 'pendingSection', 'profileSection'].forEach(id => {
+        document.getElementById(id).style.display = 'none';
+      });
+      document.getElementById(section + 'Section').style.display = 'block';
+    }
+
+    function updateStatus(id, status) {
+      db.collection("appointments").doc(id).update({ status })
+        .then(() => showPopup(`Appointment ${status}`))
+        .catch(err => showPopup("Error updating appointment."));
+    }
+
+    function confirmLogout() {
+      document.getElementById("logoutConfirm").style.display = "block";
+    }
+    function closeLogoutConfirm() {
+      document.getElementById("logoutConfirm").style.display = "none";
+    }
+    function logout() {
+      auth.signOut().then(() => window.location.href = "index.html");
+    }
+
+    auth.onAuthStateChanged(user => {
+      if (!user) {
+        window.location.href = "index.html";
+        return;
+      }
+      const userEmail = user.email.toLowerCase();
+
+      db.collection("users").doc(user.uid).get().then(doc => {
+        const data = doc.data();
+        document.getElementById("teacherName").textContent = `👨‍🏫 ${data?.name || user.email}`;
+        document.getElementById("profileName").textContent = data?.name || "N/A";
+        document.getElementById("profileEmail").textContent = user.email;
+      });
+
+      db.collection("appointments").orderBy("createdAt", "desc").onSnapshot(snapshot => {
+        const approvedContainer = document.getElementById("approvedCards");
+        const pendingBody = document.querySelector("#pendingTable tbody");
+        approvedContainer.innerHTML = "";
+        pendingBody.innerHTML = "";
+
+        snapshot.forEach(doc => {
+          const d = doc.data();
+          const teacherEmail = (d.teacherEmail || "").toLowerCase();
+
+          if (teacherEmail !== userEmail) return;
+
+          if (d.status === "Approved") {
+            const email = d.studentEmail || "noemail@example.com";
+            const card = document.createElement("div");
+            card.className = "card";
+            card.innerHTML = `
+              <p><strong>Student:</strong> <a href="mailto:${email}">${email}</a></p>
+              <p><strong>Purpose:</strong> ${d.purpose}</p>
+              <p><strong>Date & Time:</strong> ${new Date(d.apptTime).toLocaleString()}</p>
+            `;
+            approvedContainer.appendChild(card);
+          } else if (d.status === "Pending") {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+              <td>${d.studentEmail || "N/A"}</td>
+              <td>${d.purpose}</td>
+              <td>${new Date(d.apptTime).toLocaleString()}</td>
+              <td><span class="status Pending">Pending</span></td>
+              <td class="actions">
+                <button class="approve-btn" onclick="updateStatus('${doc.id}', 'Approved')">Approve</button>
+                <button class="cancel-btn" onclick="updateStatus('${doc.id}', 'Cancelled')">Cancel</button>
+              </td>`;
+            pendingBody.appendChild(tr);
+          }
+        });
+
+        if (approvedContainer.innerHTML.trim() === "") {
+          approvedContainer.innerHTML = "<p>No upcoming appointments.</p>";
+        }
+      });
+    });
+  </script>
+</body>
+</html>

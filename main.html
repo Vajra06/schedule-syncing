@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Schedule Syncing</title>
+
+  <!-- Bonheur Royale Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bonheur+Royale&display=swap" rel="stylesheet">
+
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Poppins', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: linear-gradient(-45deg, #0a2342, #102c57, #0a2342, #102c57);
+      background-size: 400% 400%;
+      animation: gradientMove 15s ease infinite;
+      color: #ffffff;
+    }
+
+    @keyframes gradientMove {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    header {
+      text-align: center;
+      padding: 100px 20px 20px;
+      animation: fadeSlideDown 1s ease forwards;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 7em;
+      font-weight: 400;
+      letter-spacing: 1px;
+      color: #ffffff;
+      font-family: "Bonheur Royale", cursive; /* Applied here */
+    }
+
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 20px;
+      animation: fadeSlideUp 2s ease forwards;
+    }
+
+    main p {
+      max-width: 650px;
+      font-size: 1.3em;
+      line-height: 1.6;
+      margin: 20px auto;
+      color: #cfd9e2;
+    }
+
+    .buttons {
+      margin-top: 35px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      justify-content: center;
+    }
+
+    .buttons a {
+      display: inline-block;
+      padding: 14px 32px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 2px solid #ffffff;
+      color: #ffffff;
+      text-decoration: none;
+      border-radius: 50px;
+      font-size: 1.1em;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+
+    .buttons a:hover {
+      background: rgba(255,255,255,0.2);
+      transform: translateY(-2px);
+    }
+
+    footer {
+      text-align: center;
+      padding: 18px;
+      font-size: 0.9em;
+      background: rgba(0,0,0,0.2);
+      color: #cfd9e2;
+    }
+
+    @keyframes fadeSlideDown {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes fadeSlideUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Responsiveness */
+    @media(max-width: 600px){
+      header h1 {
+        font-size: 2em;
+      }
+      main p {
+        font-size: 1.1em;
+      }
+      .buttons a {
+        width: 100%;
+        text-align: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Schedule Syncing</h1>
+  </header>
+  <main>
+    <p>
+      Welcome to <strong>Schedule Syncing</strong> — the smart platform empowering students, teachers, and administrators to coordinate appointments and schedules seamlessly.
+    </p>
+    <div class="buttons">
+      <a href="index.html">Login</a>
+      <a href="index.html">Register</a>
+    </div>
+  </main>
+  <footer>
+    &copy; 2025 Schedule Syncing. All rights reserved.
+  </footer>
+</body>
+</html>

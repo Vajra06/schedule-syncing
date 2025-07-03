@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link rel="icon" href="data:,">
+
+  <title>Admin Dashboard</title>
+  <style>
+    body {
+      margin:0;
+      font-family: 'Times New Roman', Times, serif;
+      background: #f4f6fa;
+      display: flex;
+      min-height: 100vh;
+    }
+    .sidebar {
+      width: 220px;
+      background: #2c3e50;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      padding-top: 20px;
+    }
+    .sidebar h3 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .sidebar button {
+      background: none;
+      border: none;
+      color: white;
+      text-align: left;
+      padding: 12px 20px;
+      font-size: 15px;
+      cursor: pointer;
+      width: 100%;
+    }
+    .sidebar button:hover {
+      background: rgba(255,255,255,0.1);
+    }
+    .content {
+      flex: 1;
+      padding: 30px;
+      overflow-x: auto;
+    }
+    h2 {
+      color: #34495e;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+      background: white;
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    th, td {
+      padding: 12px;
+      border-bottom: 1px solid #eee;
+      text-align: left;
+      vertical-align: middle;
+    }
+    th {
+      background: #ecf0f1;
+    }
+    .status {
+      font-weight: bold;
+      padding: 3px 6px;
+      border-radius: 4px;
+    }
+    .Pending { color: orange; }
+    .Approved { color: rgb(67, 38, 156); }
+    .Cancelled { color: rgb(103, 4, 22); }
+    .actions button {
+      margin-right: 6px;
+      padding: 4px 10px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+    .approve-btn {
+      background-color: #336246;
+      color: white;
+    }
+    .cancel-btn {
+      background-color: #3a0711;
+      color: white;
+    }
+    .logout-popup {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgb(229, 231, 236);
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(33, 13, 68, 0.2);
+      display: none;
+      z-index: 1000;
+      text-align: center;
+    }
+    .logout-popup button {
+      margin: 0 10px;
+      padding: 6px 14px;
+      cursor: pointer;
+    }
+    .filter-group {
+      margin-bottom: 10px;
+      font-weight: bold;
+    }
+    .filter-group label {
+      margin-right: 15px;
+      font-weight: normal;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="sidebar">
+    <h3>🛡️ Admin</h3>
+    <button onclick="showSection('home')">🏠 Home</button>
+    <button onclick="showSection('students')">✅ Approve Students</button>
+    <button onclick="showSection('appointments')">📋 All Appointments</button>
+    <button onclick="showSection('users')">👥 All Users</button>
+    <button onclick="confirmLogout()">🚪 Logout</button>
+  </div>
+  <div class="content">
+    <!-- Home Section -->
+    <div id="homeSection">
+      <h2>Welcome, Admin</h2>
+      <p>Select an option from the sidebar.</p>
+    </div>
+    <!-- Approve Students -->
+    <div id="studentsSection" style="display:none;">
+      <h2>Pending Student Registrations</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="studentsBody"></tbody>
+      </table>
+    </div>
+    <!-- All Appointments -->
+    <div id="appointmentsSection" style="display:none;">
+      <h2>All Appointments</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Student</th>
+            <th>Teacher</th>
+            <th>Date & Time</th>
+            <th>Purpose</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="appointmentsBody"></tbody>
+      </table>
+    </div>
+    <!-- All Users with Radio Filter -->
+    <div id="usersSection" style="display:none;">
+      <h2>All Users</h2>
+      <div class="filter-group">
+        <label><input type="radio" name="roleFilter" value="all" checked> All</label>
+        <label><input type="radio" name="roleFilter" value="student"> Students</label>
+        <label><input type="radio" name="roleFilter" value="teacher"> Teachers</label>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Role</th>
+          </tr>
+        </thead>
+        <tbody id="usersBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Logout Confirmation -->
+  <div id="logoutPopup" class="logout-popup">
+    <p>Are you sure you want to logout?</p>
+    <button onclick="doLogout()">Yes</button>
+    <button onclick="hideLogout()">No</button>
+  </div>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+  <script>
+    // Firebase Config
+    const firebaseConfig = {
+      apiKey: "AIzaSyCxZqdueSoYW2c0ExgV_7CdbxmLjtk9QWs",
+      authDomain: "schedulesyncing.firebaseapp.com",
+      projectId: "schedulesyncing",
+      storageBucket: "schedulesyncing.appspot.com",
+      messagingSenderId: "28491593216",
+      appId: "1:28491593216:web:c4991a6ae34181a51c0ae5"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    let allUsers = [];
+
+    function showSection(section) {
+      ['homeSection', 'studentsSection', 'appointmentsSection', 'usersSection'].forEach(id => {
+        document.getElementById(id).style.display = 'none';
+      });
+      document.getElementById(section + 'Section').style.display = 'block';
+    }
+
+    auth.onAuthStateChanged(user => {
+      if (!user) {
+        window.location.href = "index.html";
+        return;
+      }
+
+      // Load pending students (only those NOT approved)
+      db.collection("users").where("role", "==", "student").where("approved", "==", false).get().then(snapshot => {
+        const tbody = document.getElementById("studentsBody");
+        tbody.innerHTML = "";
+        snapshot.forEach(doc => {
+          const d = doc.data();
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${d.name}</td>
+            <td>${d.email}</td>
+            <td><button onclick="approveStudent('${doc.id}')">Approve</button></td>
+          `;
+          tbody.appendChild(tr);
+        });
+      });
+
+      // Load all appointments with approve/cancel buttons
+      db.collection("appointments").orderBy("createdAt", "desc").onSnapshot(snapshot => {
+        const tbody = document.getElementById("appointmentsBody");
+        tbody.innerHTML = "";
+        snapshot.forEach(doc => {
+          const d = doc.data();
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${d.studentEmail}</td>
+            <td>${d.teacherEmail}</td>
+            <td>${new Date(d.apptTime).toLocaleString()}</td>
+            <td>${d.purpose}</td>
+            <td><span class="status ${d.status}">${d.status}</span></td>
+            <td>
+              <button class="approve-btn" onclick="updateStatus('${doc.id}', 'Approved')">Approve</button>
+              <button class="cancel-btn" onclick="updateStatus('${doc.id}', 'Cancelled')">Cancel</button>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+      });
+
+      // Load all users (cache in allUsers and filter locally)
+      db.collection("users").onSnapshot(snapshot => {
+        allUsers = [];
+        snapshot.forEach(doc => {
+          allUsers.push(doc.data());
+        });
+        filterUsers();
+      });
+    });
+
+    function approveStudent(id) {
+      db.collection("users").doc(id).update({ approved: true })
+        .then(() => alert("Student approved."));
+    }
+
+    function updateStatus(id, status) {
+      db.collection("appointments").doc(id).update({ status })
+        .then(() => alert(`Appointment ${status}`))
+        .catch(err => alert("Error updating appointment status: " + err.message));
+    }
+
+    function filterUsers() {
+      const filter = document.querySelector('input[name="roleFilter"]:checked').value;
+      const tbody = document.getElementById("usersBody");
+      tbody.innerHTML = "";
+      allUsers.forEach(d => {
+        if (filter === "all" || d.role === filter) {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${d.name}</td>
+            <td>${d.email}</td>
+            <td>${d.role}</td>
+          `;
+          tbody.appendChild(tr);
+        }
+      });
+    }
+
+    // Add event listener for role filter radio buttons
+    document.querySelectorAll('input[name="roleFilter"]').forEach(radio => {
+      radio.addEventListener('change', filterUsers);
+    });
+
+    function confirmLogout() {
+      document.getElementById("logoutPopup").style.display = "block";
+    }
+
+    function hideLogout() {
+      document.getElementById("logoutPopup").style.display = "none";
+    }
+
+    function doLogout() {
+      auth.signOut().then(() => window.location.href = "index.html");
+    }
+  </script>
+</body>
+</html>
